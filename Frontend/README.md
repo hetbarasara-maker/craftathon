@@ -5,6 +5,7 @@ A modern, responsive React frontend for a medication adherence tracking system w
 ## 🎯 Features
 
 ### Patient Features
+
 - **Medication Dashboard** - View today's medications at a glance
 - **Add Medications** - Easy medication management with dosage and frequency
 - **Schedule View** - Calendar and list-based medication scheduling
@@ -13,6 +14,7 @@ A modern, responsive React frontend for a medication adherence tracking system w
 - **Streak Counter** - Motivation through consistency tracking
 
 ### Doctor/Caregiver Features
+
 - **Patient Management** - Monitor multiple patients' adherence
 - **Real-time Alerts** - Get notified of missed doses
 - **Patient Details** - Comprehensive view of each patient's medication history
@@ -20,6 +22,7 @@ A modern, responsive React frontend for a medication adherence tracking system w
 - **Missed Dose Tracking** - Identify and follow up on missed medications
 
 ### UI/UX Features
+
 - **Claymorphism Design** - Soft, modern 3D aesthetic
 - **Responsive Design** - Mobile-first approach works on all devices
 - **Authentication** - Role-based login (Patient/Doctor)
@@ -36,7 +39,7 @@ A modern, responsive React frontend for a medication adherence tracking system w
 
 ## 📁 Project Structure
 
-```
+```txt
 Frontend/
 ├── index.html              # HTML entry point
 ├── package.json            # Dependencies & scripts
@@ -81,12 +84,14 @@ Frontend/
 ## 🎨 Design System
 
 ### Color Palette
+
 - **Primary Dark**: `#205658` - Headers, primary text
 - **Primary Blue**: `#0066FC` - Buttons, links, interactive elements
 - **Light Background**: `#ACD8FF` - Page background
 - **White**: `#FFFFFF` - Card backgrounds, contrast
 
 ### Styling Features
+
 - **Border Radius**: 20px+ for all components (Claymorphism)
 - **Shadows**: Soft 3D shadows for depth
 - **Spacing**: Consistent padding and margins
@@ -96,29 +101,35 @@ Frontend/
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (v14 or higher)
 - npm or yarn
 
 ### Installation
 
 1. **Install Dependencies**
+
    ```bash
    cd Frontend
    npm install
    ```
 
 2. **Start Development Server**
+
    ```bash
    npm run dev
    ```
+
    The app will open at `http://localhost:3000`
 
 3. **Build for Production**
+
    ```bash
    npm run build
    ```
 
 4. **Preview Production Build**
+
    ```bash
    npm run preview
    ```
@@ -126,22 +137,26 @@ Frontend/
 ## 📱 Routes & Navigation
 
 ### Public Routes
+
 - `/` - Landing page
 - `/login` - Login page
 - `/signup` - Signup page
 
 ### Patient Routes (Protected)
+
 - `/dashboard` - Patient home
 - `/add-medication` - Add new medication
 - `/schedule` - View medication schedule
 - `/adherence` - View adherence statistics
 
 ### Doctor Routes (Protected)
+
 - `/doctor-dashboard` - Doctor home
 - `/patient/:patientId` - Patient details
 - `/alerts` - Patient alerts
 
 ### Shared Routes (Protected)
+
 - `/profile` - User profile and settings
 
 ## 🔐 Authentication
@@ -154,36 +169,42 @@ The app uses a simple context-based authentication system:
 - **Local Storage**: Auth state persists across page refreshes
 
 ### Demo Credentials
+
 - **Email**: Any valid email format (e.g., `demo@example.com`)
 - **Password**: Any password (6+ characters)
 
 ## 🧩 Key Components
 
 ### Navbar
+
 - Logo and branding
 - Navigation links
 - User info display
 - Logout button
 
 ### Card
+
 - Reusable container component
 - Claymorphism styling
 - Optional click handler
 - Consistent spacing
 
 ### Button
+
 - Primary and Secondary variants
 - Hover and active states
 - Loading states support
 - Full width option
 
 ### Input
+
 - Text, email, password fields
 - Label support
 - Required field indicators
 - Validation styling
 
 ### CircleProgress
+
 - Animated progress circles
 - Customizable size and color
 - Percentage display
@@ -192,6 +213,7 @@ The app uses a simple context-based authentication system:
 ## 🎯 User Flows
 
 ### Patient Flow
+
 1. Sign up or Login
 2. Access dashboard with today's medications
 3. Add or manage medications
@@ -200,6 +222,7 @@ The app uses a simple context-based authentication system:
 6. Edit profile and preferences
 
 ### Doctor Flow
+
 1. Login as Doctor
 2. View list of patients
 3. Check individual patient details
@@ -210,7 +233,9 @@ The app uses a simple context-based authentication system:
 ## 🔧 Customization
 
 ### Change Colors
+
 Edit `tailwind.config.js`:
+
 ```javascript
 colors: {
   'primary-dark': '#205658',
@@ -220,11 +245,13 @@ colors: {
 ```
 
 ### Add New Pages
+
 1. Create component in `src/pages/`
 2. Add route in `src/routes/AppRoutes.jsx`
 3. Update navigation if needed
 
 ### Modify Styling
+
 - Global styles in `src/index.css`
 - Component-specific: Use Tailwind classes
 - Customize theme in `tailwind.config.js`
@@ -258,7 +285,8 @@ To connect with a backend:
 ## 📝 Environment Variables
 
 Create a `.env.local` file for environment-specific configs:
-```
+
+```txt
 VITE_API_URL=http://localhost:5000
 VITE_APP_NAME=MediTrack
 ```
