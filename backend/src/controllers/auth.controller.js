@@ -221,8 +221,11 @@ const forgotPassword = async (req, res, next) => {
             data: { resetToken, resetTokenExpiry },
         });
 
-        const link = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-        const { subject, html } = emailTemplates.resetPassword(user.firstName, link);
+        // Use backend URL for reset password (returns HTML form to reset)
+        let backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+        backendUrl = backendUrl.replace(/\/$/, '');
+        const resetLink = `${backendUrl}/api/v1/auth/reset-password/${resetToken}`;
+        const { subject, html } = emailTemplates.resetPassword(user.firstName, resetLink);
         await sendEmail(email, subject, html);
 
         sendSuccess(res, {}, "If that email exists, a reset link has been sent.");
@@ -231,7 +234,164 @@ const forgotPassword = async (req, res, next) => {
     }
 };
 
-// ─── Reset Password ───────────────────────────────────────────────────────────
+// ─── Reset Password (GET - Show Form) ─────────────────────────────────────────
+const resetPasswordForm = async (req, res, next) => {
+    try {
+        const { token } = req.params;
+
+        // Verify token exists and not expired
+        const user = await prisma.user.findFirst({
+            where: { resetToken: token, resetTokenExpiry: { gt: new Date() } },
+        });
+
+        if (!user) {
+            return res.send(`
+                <html>
+                    <head>
+                        <title>Password Reset</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f3f4f6; }
+                            .container { text-align: center; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 400px; }
+                            h1 { color: #dc2626; margin: 0 0 10px 0; font-size: 24px; }
+                            p { color: #4b5563; margin: 0 0 20px 0; }
+                            a { display: inline-block; background: #2F5B8C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <h1>Reset Link Expired</h1>
+                            <p>Sorry, this reset link has expired. Please request a new one.</p>
+                            <a href="${process.env.FRONTEND_URL || 'https://craftathon.vercel.app'}/forgot-password">Request New Link</a>
+                        </div>
+                    </body>
+                </html>
+            `);
+        }
+
+        // Token is valid, show reset form
+        res.send(`
+            <html>
+                <head>
+                    <title>Reset Your Password</title>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+                        .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 400px; width: 100%; }
+                        h1 { color: #1f2937; margin-bottom: 10px; font-size: 28px; }
+                        .subtitle { color: #6b7280; margin-bottom: 30px; font-size: 14px; }
+                        .form-group { margin-bottom: 20px; }
+                        label { display: block; color: #374151; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+                        input { width: 100%; padding: 12px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; transition: all 0.3s; font-family: inherit; }
+                        input:focus { outline: none; border-color: #2F5B8C; box-shadow: 0 0 0 3px rgba(47, 91, 140, 0.1); }
+                        .password-wrapper { position: relative; }
+                        .toggle-password { position: absolute; right: 12px; top: 38px; cursor: pointer; color: #6b7280; font-size: 18px; border: none; background: none; padding: 0; }
+                        .error { color: #dc2626; font-size: 13px; margin-top: 5px; display: none; }
+                        button { width: 100%; padding: 12px 14px; background: linear-gradient(135deg, #2F5B8C 0%, #3E6FA3 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.3s; margin-top: 10px; }
+                        button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(47, 91, 140, 0.3); }
+                        button:active { transform: translateY(0); }
+                        .info { background: #eff6ff; border-left: 4px solid #2F5B8C; padding: 12px 14px; border-radius: 6px; margin-bottom: 20px; color: #1e40af; font-size: 13px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>Reset Password</h1>
+                        <p class="subtitle">Enter your new password below</p>
+                        
+                        <div class="info">💡 Password must be at least 8 characters long</div>
+                        
+                        <form id="resetForm">
+                            <div class="form-group">
+                                <label for="password">New Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="password" name="password" required placeholder="Enter new password" minlength="8">
+                                    <button type="button" class="toggle-password" onclick="togglePassword('password')">👁️</button>
+                                </div>
+                                <div class="error" id="passwordError"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Re-enter password" minlength="8">
+                                    <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">👁️</button>
+                                </div>
+                                <div class="error" id="confirmError"></div>
+                            </div>
+                            
+                            <button type="submit">Reset Password</button>
+                        </form>
+                        
+                        <div id="successMessage" style="display: none; margin-top: 20px; padding: 15px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; color: #15803d;">
+                            <p style="margin: 0; font-weight: 600;">✓ Password reset successfully!</p>
+                            <p style="margin-top: 8px; font-size: 13px;">Redirecting to login...</p>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        function togglePassword(fieldId) {
+                            const field = document.getElementById(fieldId);
+                            field.type = field.type === 'password' ? 'text' : 'password';
+                        }
+                        
+                        document.getElementById('resetForm').addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            
+                            const password = document.getElementById('password').value;
+                            const confirmPassword = document.getElementById('confirmPassword').value;
+                            
+                            // Clear errors
+                            document.getElementById('passwordError').style.display = 'none';
+                            document.getElementById('confirmError').style.display = 'none';
+                            
+                            // Validation
+                            if (password.length < 8) {
+                                document.getElementById('passwordError').textContent = 'Password must be at least 8 characters';
+                                document.getElementById('passwordError').style.display = 'block';
+                                return;
+                            }
+                            
+                            if (password !== confirmPassword) {
+                                document.getElementById('confirmError').textContent = 'Passwords do not match';
+                                document.getElementById('confirmError').style.display = 'block';
+                                return;
+                            }
+                            
+                            try {
+                                const response = await fetch('/api/v1/auth/reset-password', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ token: '${token}', password })
+                                });
+                                
+                                const data = await response.json();
+                                
+                                if (response.ok) {
+                                    document.getElementById('resetForm').style.display = 'none';
+                                    document.getElementById('successMessage').style.display = 'block';
+                                    setTimeout(() => {
+                                        window.location.href = '${process.env.FRONTEND_URL || 'https://craftathon.vercel.app'}/login';
+                                    }, 2000);
+                                } else {
+                                    document.getElementById('passwordError').textContent = data.message || 'Failed to reset password';
+                                    document.getElementById('passwordError').style.display = 'block';
+                                }
+                            } catch (error) {
+                                document.getElementById('passwordError').textContent = 'Network error. Please try again.';
+                                document.getElementById('passwordError').style.display = 'block';
+                            }
+                        });
+                    </script>
+                </body>
+            </html>
+        `);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// ─── Reset Password (POST - Update Password) ───────────────────────────────────
 const resetPassword = async (req, res, next) => {
     try {
         const { token, password } = req.body;
@@ -241,7 +401,7 @@ const resetPassword = async (req, res, next) => {
         });
         if (!user) throw new AppError("Invalid or expired reset token.", 400);
 
-        const passwordHash = await bcrypt.hash(password, 12);
+        const passwordHash = await bcrypt.hash(password, 10);
         await prisma.user.update({
             where: { id: user.id },
             data: { passwordHash, resetToken: null, resetTokenExpiry: null },
@@ -272,4 +432,4 @@ const getMe = async (req, res, next) => {
     }
 };
 
-module.exports = { register, verifyEmail, login, refreshToken, logout, forgotPassword, resetPassword, getMe };
+module.exports = { register, verifyEmail, login, refreshToken, logout, forgotPassword, resetPasswordForm, resetPassword, getMe };

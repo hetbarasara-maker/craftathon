@@ -23,10 +23,12 @@ const app = express();
 // Configure CORS with proper origin handling
 const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:5000',        // Backend itself
     'http://localhost:5173',
     'http://localhost:3173',
     'https://craftathon.vercel.app',
     'https://craftathon.onrender.com',
+    process.env.BACKEND_URL?.replace(/\/$/, ''),  // Production backend URL
 ].filter(Boolean);
 
 app.use(cors({

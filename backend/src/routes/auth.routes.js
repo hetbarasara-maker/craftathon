@@ -47,6 +47,9 @@ router.post("/forgot-password",
     ctrl.forgotPassword
 );
 
+// GET /api/v1/auth/reset-password/:token (Show reset form)
+router.get("/reset-password/:token", ctrl.resetPasswordForm);
+
 // POST /api/v1/auth/reset-password
 router.post("/reset-password",
     [
