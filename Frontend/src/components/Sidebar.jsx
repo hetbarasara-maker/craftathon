@@ -87,7 +87,7 @@ export default function Sidebar() {
       {/* Menu Items */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {menuItems.map((item) => (
-          (!item.roles || item.roles.includes(user?.role)) && (
+          (!item.roles || item.roles.includes(user?.role?.toLowerCase())) && (
             <Link
               key={item.path}
               to={item.path}
